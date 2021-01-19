@@ -499,6 +499,14 @@ end
 @inline norm(u::MultiValue{Tuple{D}}) where D = sqrt(inner(u,u))
 @inline norm(u::MultiValue{Tuple{0},T}) where T = sqrt(zero(T))
 
+function normInf(b::MultiValue{Tuple{2}})
+  m = 0
+  for bi in b
+    m = max(m,abs(bi))
+  end
+  m
+end
+
 ###############################################################
 # conj
 ###############################################################

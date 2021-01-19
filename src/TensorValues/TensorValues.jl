@@ -44,7 +44,7 @@ export SymTensorValue
 export SymFourthOrderTensorValue
 export ThirdOrderTensorValue
 
-export inner, outer, meas
+export inner, outer, meas, normInf
 export mutable
 export Mutable
 export symmetric_part
