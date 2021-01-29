@@ -356,6 +356,12 @@ v = TensorValue{2,3}(1,0,0,1,0,0)
 v = TensorValue{2,3}(1,0,0,1,1,0)
 @test meas(v) ≈ sqrt(2)
 
+v = VectorValue(2,-3)
+@test normInf(v) == 3 
+
+v = VectorValue(-3,1,2)
+@test normInf(v) == 3
+
 # Broadcasted operations
 
 a = VectorValue(1,2,3)
