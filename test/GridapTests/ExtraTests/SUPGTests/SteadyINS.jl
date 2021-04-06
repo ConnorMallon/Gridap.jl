@@ -2,6 +2,14 @@ module inscut
 
 #formulation taken from: https://arxiv.org/pdf/1710.08898.pdf
 
+
+#############
+#WARNING: Steady solutions for high Re do in general not exist & maybe unstable.
+#############
+#############
+#############
+
+
 using Gridap
 using ForwardDiff
 using LinearAlgebra
@@ -14,9 +22,10 @@ using Gridap.CellData
 using LineSearches: BackTracking
 
 conv(u, ∇u) = (∇u') ⋅ u
-dconv(du, ∇du, u, ∇u) = conv(u, ∇du) + conv(du, ∇u) 
+dconv(du, ∇du, u, ∇u) = conv(u, ∇du) #+ conv(du, ∇u) 
 
-Re = ( 1.5 * 10^-4 )^-1  #* 0.01
+Re = ( 1.5 * 10^-4 )^-1 * 0.01
+# Re = ( 15 )^-1 Diffusion dominated
 
 # Physical constants
 u_max = 1
@@ -77,10 +86,10 @@ X = MultiFieldFESpace([U,P])
 Y = MultiFieldFESpace([V,Q])
 
 #STABILISATION
-α_τ = 0.1
+α_τ = 0.01
 
-#τ_SUPG(u) = α_τ * inv(sqrt(  ( 2 * normInf(u) / h )*( 2 * normInf(u) / h ) + 9 * ( 4*ν / h^2 )^2 )) # SUPG Stabilisation - convection stab ( τ_SUPG(u )
-τ_SUPG(u) = α_τ * inv(sqrt( ( 2 * sqrt(u⋅u) / h )*( 2 * sqrt(u⋅u) / h )  + 9 * ( 4*ν / h^2 )^2  )) # SUPG Stabilisation - convection stab ( τ_SUPG(u )
+τ_SUPG(u) = α_τ * inv(sqrt(  ( 2 * normInf(u) / h )*( 2 * normInf(u) / h ) + 9 * ( 4*ν / h^2 )^2 )) # SUPG Stabilisation - convection stab ( τ_SUPG(u )
+#τ_SUPG(u) = α_τ * inv(sqrt( ( 2 * sqrt(u⋅u) / h )*( 2 * sqrt(u⋅u) / h )  + 9 * ( 4*ν / h^2 )^2  )) # SUPG Stabilisation - convection stab ( τ_SUPG(u )
 
 τ_PSPG(u) = τ_SUPG(u) # PSPG stabilisation - inf-sup stab  ( ρ^-1 * τ_PSPG(u) )
 
@@ -116,10 +125,15 @@ jac((u,p),(du,dp),(v,q)) =
 #op = FEOperator(res,X,Y)
 op = FEOperator(res,jac,X,Y)
 
+ #=
 nls = NLSolver(
   show_trace=true, 
   method=:newton, 
   linesearch=BackTracking())
+ =#
+
+ls=LUSolver()
+nls = NewtonRaphsonSolver(ls,1e-4,30)
 
 solver = FESolver(nls)
 
@@ -136,6 +150,8 @@ h1(u) = sqrt(sum( ∫( u⊙u + ∇(u)⊙∇(u) )*dΩ ))
 eul2 = l2(eu)
 euh1 = h1(eu)
 epl2 = l2(ep)
+
+@show (eul2,euh1,epl2,h)
 
 (eul2,euh1,epl2,h)
 

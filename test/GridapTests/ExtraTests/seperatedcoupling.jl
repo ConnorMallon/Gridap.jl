@@ -101,20 +101,63 @@ Q = FESpace(
 
 U = TrialFESpace(V,u)
 P = TrialFESpace(Q)
+Y = MultiFieldFESpace([V,Q])
+X = MultiFieldFESpace([U,P])
+
+
+Γ = BoundaryTriangulation(model)
+Q_Γ =  CellQuadrature(Γ,degree)
+Q_Ω = CellQuadrature(Ω,degree)
+uh, ph = FEFunction(X,rand(num_free_dofs(X)))
+dv=get_cell_shapefuns(V)
+integrate(uh⋅dv,Q_Γ)
+integrate(uh⋅dv,Q_Ω)
+
+
+
+#=
+vsf = get_cell_shapefuns(V)
+vsfd = get_data(vsf)
+va = axes(vsfd)
+
+qsf = get_cell_shapefuns(Q)
+qsfd = get_data(qsf)
+qa = axes(qsfd)
+
+append_ranges([first(qa),first(va)])
+
+
+
+
 
 
 #QΓ =  CellQuadrature(Γ,degree)
 #@show num_free_dofs(P)
 #@show length(get_node_coordinates(Γi))
 
-get_cell_shapefuns_trial(Q)
-get_cell_shapefuns(Q)
-
+dp = get_cell_shapefuns_trial(Q)
+dq = get_cell_shapefuns(Q)
+du = get_cell_shapefuns_trial(V)
+dv = get_cell_shapefuns(V)
 
 #get_data(QΓ)
 
-Y = MultiFieldFESpace([V,Q])
-X = MultiFieldFESpace([U,P])
+
+function _multifield_axes_dofs(axs...)
+  rs = map(first,axs)
+  (append_ranges([rs...]),)
+end
+
+
+# Compute the cell axes
+blocks = map(get_cell_shapefuns,X.spaces)
+blocks_data = map(get_data,blocks)
+cell_axes_blocks = map(i->lazy_map(axes,i),blocks_data)
+cell_axes = lazy_map(_multifield_axes_dofs,cell_axes_blocks...)
+
+=#
+
+
 
 #uh, ph = FEFunction(X,rand(num_free_dofs(X)))
 #vh, qh = FEFunction(Y,rand(num_free_dofs(Y)))
@@ -123,32 +166,35 @@ X = MultiFieldFESpace([U,P])
 # Weak form
 a((u,p),(v,q)) =
   ∫( ∇(v)⊙∇(u) )*dΩ +
-  ∫( q*u -q*p )*dΩf 
+  ∫( q*u -q*p  )*dΩf 
+  #∫( q*u -q*p )*dΩΓ
 
-l((v,q)) =
+l((v,q)) = 
   ∫( v⋅s )*dΩ +
-  ∫(  q⋅f )*dΩf 
+  ∫( q⋅f )*dΩf 
+  #∫(  q⋅f )*dΩΓ
 
 
 # FE problem
-
 op = AffineFEOperator(a,l,X,Y)
 uh, ph = solve(op)
 
 # Visualization
-
 eu = u - uh
 ep = p - ph
 
 #writevtk(Ω,"trian",cellfields=["uh"=>uh,"ph"=>ph,"eu"=>eu,"ep"=>ep])
 #writevtk(Ωf,"trian_fluid",cellfields=["uh"=>uh,"ph"=>ph,"eu"=>eu,"ep"=>ep])
  # Errors 
- eu_l2 = sqrt(sum(∫( eu⋅eu )*dΩ)) 
- eu_h1 = sqrt(sum(∫( eu⋅eu + ∇(eu)⊙∇(eu) )*dΩ)) 
- ep_l2 = sqrt(sum(∫( ep*ep )*dΩf)) 
- tol = 1.0e-9
+eu_l2 = sqrt(sum(∫( eu⋅eu )*dΩ)) 
+eu_h1 = sqrt(sum(∫( eu⋅eu + ∇(eu)⊙∇(eu) )*dΩ)) 
+ep_l2 = sqrt(sum(∫( ep*ep )*dΩf)) 
+tol = 1.0e-9
 @test eu_l2 < tol
 @test eu_h1 < tol
 @test ep_l2 < tol
 
 end # module
+
+
+
