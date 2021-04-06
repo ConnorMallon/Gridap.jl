@@ -53,6 +53,10 @@ function _solve_nr!(x,A,b,dx,ns,nls,op)
   # Newton-like iterations
   for nliter in 1:nls.max_nliters
 
+
+    @show nliter
+    
+
     # Solve linearized problem
     scale_entries!(b,-1)
     solve!(dx,ns,b)
@@ -60,11 +64,16 @@ function _solve_nr!(x,A,b,dx,ns,nls,op)
 
     # Check convergence for the current residual
     residual!(b, op, x)
+
+    #@show length(b)
+    #@show length(filter(!isnan,b))
+
     isconv = _check_convergence(nls, b, conv0)
     if isconv; return; end
 
     if nliter == nls.max_nliters
       @unreachable
+      #dt=0.5*dt
     end
 
     # Assemble jacobian (fast in-place version)
@@ -83,6 +92,7 @@ end
 
 function _check_convergence(nls,b,m0)
   m = _inf_norm(b)
+  @show (m0,m)
   m < nls.tol * m0
 end
 
