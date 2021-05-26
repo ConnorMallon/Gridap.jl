@@ -5,6 +5,8 @@ $(EXPORTS)
 """
 module CellData
 
+import Base: inv, abs, abs2, *, +, -, /, adjoint, transpose, real, imag, conj, maximum, sqrt, exp
+
 using Test
 using DocStringExtensions
 using FillArrays
@@ -30,7 +32,7 @@ import Gridap.Geometry: get_triangulation
 
 import Gridap.TensorValues: inner, outer, double_contraction, symmetric_part, normInf
 import LinearAlgebra: det, tr, cross, dot, ⋅
-import Base: inv, abs, abs2, *, +, -, /, adjoint, transpose, real, imag, conj, maximum, sqrt
+
 
 export gradient, ∇, normInf
 export ∇∇

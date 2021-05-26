@@ -103,6 +103,10 @@ h = Operation(*)(2,f)
 hx = h(x)
 test_array(hx,2*fx)
 
+h = Operation(exp)(f)
+hx = h(x)
+test_array(hx,collect(hx))
+
 a = fill(2,num_cells(trian))
 h = Operation(*)(a,f)
 hx = h(x)
