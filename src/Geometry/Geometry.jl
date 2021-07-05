@@ -69,6 +69,7 @@ import Gridap.ReferenceFEs: num_cell_dims
 import Gridap.ReferenceFEs: num_point_dims
 import Gridap.ReferenceFEs: simplexify
 import Gridap.ReferenceFEs: get_facet_normal
+import Gridap.ReferenceFEs: Quadrature
 
 export GridTopology
 export num_cells
@@ -95,6 +96,8 @@ export is_oriented
 export is_regular
 export expand_cell_data
 export compress_cell_data
+export compress_contributions
+export compress_ids
 
 export UnstructuredGridTopology
 
@@ -121,7 +124,6 @@ export test_grid
 export compute_linear_grid
 export compute_reference_grid
 
-export TriangulationPortion
 export RestrictedTriangulation
 export GridPortion
 export UnstructuredGrid
@@ -217,6 +219,8 @@ include("DiscreteModelPortions.jl")
 include("RestrictedDiscreteModels.jl")
 
 include("AppendedTriangulations.jl")
+
+include("CompressedCellArrays.jl")
 
 include("BoundaryDiscreteModel.jl")
 
