@@ -6,7 +6,6 @@ using Gridap.Algebra
 using Gridap.TensorValues
 using Gridap.ReferenceFEs
 using Gridap.Geometry
-using Gridap.Integration
 using Gridap.Fields
 using Gridap.FESpaces
 using LinearAlgebra
@@ -25,8 +24,8 @@ degree = 4
 quad = CellQuadrature(trian,degree)
 
 #f(x) = x[2]
-#v = get_cell_shapefuns(V)
-#u = get_cell_shapefuns_trial(U)
+#v = get_fe_basis(V)
+#u = get_trial_fe_basis(U)
 #
 #cellmat = integrate(∇(v)⊙∇(u),quad)
 #cellvec = integrate(v*f,quad)

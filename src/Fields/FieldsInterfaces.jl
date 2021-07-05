@@ -235,7 +235,7 @@ end
 # I think it is conceptually better to have ConstantField as struct otherwise we break the invariant
 # "for any object wrapped in a GenericField we can assume that it implements the Field interface"
 struct ConstantField{T<:Number} <: Field
-  object::T
+  value::T
 end
 
 @inline constant_field(a) = ConstantField(a)
@@ -243,12 +243,12 @@ end
 Base.zero(::Type{ConstantField{T}}) where T = ConstantField(zero(T))
 
 @inline function evaluate!(c,f::ConstantField,x::Point)
-  f.object
+  f.value
 end
 
 function return_cache(f::ConstantField,x::AbstractArray{<:Point})
   nx = size(x)
-  c = fill(f.object,nx)
+  c = fill(f.value,nx)
   CachedArray(c)
 end
 
@@ -258,19 +258,19 @@ function evaluate!(c,f::ConstantField,x::AbstractArray{<:Point})
   # in the same array and we try to reuse cache between them.
   #if size(c) != nx
     setsize!(c,nx)
-    fill!(c.array,f.object)
+    fill!(c.array,f.value)
   #end
   c.array
 end
 
 @inline function return_cache(f::FieldGradient{N,<:ConstantField},x::Point) where N
-  gradient(f.object.object,Val(N))(x)
+  gradient(f.object.value,Val(N))(x)
 end
 
 @inline evaluate!(c,f::FieldGradient{N,<:ConstantField},x::Point) where N = c
 
 @inline function return_cache(f::FieldGradient{N,<:ConstantField},x::AbstractArray{<:Point}) where N
-  CachedArray(gradient(f.object.object,Val(N)).(x))
+  CachedArray(gradient(f.object.value,Val(N)).(x))
 end
 
 function evaluate!(c,f::FieldGradient{N,<:ConstantField},x::AbstractArray{<:Point}) where N
@@ -348,16 +348,21 @@ return_value(op::Broadcasting{<:Operation},x::Field...) = OperationField(op.f.op
 
 # Define some well known operations
 
-for op in (:+,:-,:*,:⋅,:⊙,:⊗,:inv,:det,:tr,:grad2curl,:symmetric_part,:transpose)
+for op in (:+,:-,:*,:⋅,:⊙,:⊗,:inv,:det,:meas,:pinvJt,:tr,:grad2curl,:symmetric_part,:transpose)
   @eval ($op)(a::Field...) = Operation($op)(a...)
 end
 
 @inline transpose(f::Field) = f
 
-@inline *(A::Number, B::Field) = ConstantField(A)*B
-@inline *(A::Field, B::Number) = A*ConstantField(B)
-@inline ⋅(A::Number, B::Field) = ConstantField(A)⋅B
-@inline ⋅(A::Field, B::Number) = A⋅ConstantField(B)
+for op in (:+,:-,:*,:⋅,:⊙,:⊗)
+  @eval ($op)(a::Field,b::Number) = Operation($op)(a,ConstantField(b))
+  @eval ($op)(a::Number,b::Field) = Operation($op)(ConstantField(a),b)
+end
+
+#@inline *(A::Number, B::Field) = ConstantField(A)*B
+#@inline *(A::Field, B::Number) = A*ConstantField(B)
+#@inline ⋅(A::Number, B::Field) = ConstantField(A)⋅B
+#@inline ⋅(A::Field, B::Number) = A⋅ConstantField(B)
 
 #@inline *(A::Function, B::Field) = GenericField(A)*B
 #@inline *(A::Field, B::Function) = GenericField(B)*A
@@ -398,6 +403,10 @@ end
 
 function product_rule(::typeof(⋅),f1::VectorValue,f2::VectorValue,∇f1,∇f2)
   ∇f1⋅f2 + ∇f2⋅f1
+end
+
+function product_rule(::typeof(⋅),f1::TensorValue,f2::VectorValue,∇f1,∇f2)
+  ∇f1⋅f2 + ∇f2⋅transpose(f1)
 end
 
 for op in (:*,:⋅,:⊙,:⊗)
@@ -542,8 +551,8 @@ end
 @inline function evaluate!(cache,k::IntegrationMap,aq::AbstractArray,w,jq::AbstractVector)
   setsize!(cache,size(aq)[2:end])
   r = cache.array
-  @check size(aq,1) == length(w)
-  @check size(aq,1) == length(jq)
+  @check size(aq,1) == length(w) || size(aq,1) == 0
+  @check size(aq,1) == length(jq) || size(aq,1) == 0
   fill!(r,zero(eltype(r)))
   cis = CartesianIndices(r)
   @inbounds for p in 1:length(w)
@@ -555,19 +564,33 @@ end
   r
 end
 
+function return_cache(k::IntegrationMap,aq::AbstractArray{S,3} where S,w,jq::AbstractVector)
+  T = typeof( testitem(aq)*testitem(w)*meas(testitem(jq)) + testitem(aq)*testitem(w)*meas(testitem(jq)) )
+  r = zeros(T,size(aq)[2:end])
+  s = zeros(typeof(meas(testitem(jq))),length(jq))
+  CachedArray(r), CachedArray(s)
+end
+
 @inline function evaluate!(cache,k::IntegrationMap,aq::AbstractArray{S,3} where S, w,jq::AbstractVector)
+  cache_r, cache_s = cache
   np, ni, nj = size(aq)
-  setsize!(cache,(ni,nj))
-  r = cache.array
-  @check size(aq,1) == length(w)
-  @check size(aq,1) == length(jq)
-  fill!(r,zero(eltype(r)))
+  setsize!(cache_r,(ni,nj))
+  setsize!(cache_s,(np,))
+  r = cache_r.array
+  dV = cache_s.array
+  @check np == length(w) || np == 0
+  @check np == length(jq) || np == 0
   @inbounds for p in 1:np
-    dV = meas(jq[p])*w[p]
-    for j in 1:nj
-      for i in 1:ni
-        r[i,j] += aq[p,i,j]*dV
+    dV[p] = meas(jq[p])*w[p]
+  end
+  #fill!(r,zero(eltype(r)))
+  @inbounds for j in 1:nj
+    for i in 1:ni
+      rij = zero(eltype(aq))
+      for p in 1:np
+        rij += aq[p,i,j]*dV[p]
       end
+      r[i,j] = rij
     end
   end
   r
@@ -577,8 +600,8 @@ end
   np, ni = size(aq)
   setsize!(cache,(ni,))
   r = cache.array
-  @check size(aq,1) == length(w)
-  @check size(aq,1) == length(jq)
+  @check np == length(w) || np == 0
+  @check np == length(jq) || np == 0
   fill!(r,zero(eltype(r)))
   @inbounds for p in 1:np
     dV = meas(jq[p])*w[p]

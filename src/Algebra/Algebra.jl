@@ -18,6 +18,8 @@ import Base: convert, size, getindex, show, count, *
 import LinearAlgebra: mul!
 import SparseArrays: nnz, nonzeros, nzrange, findnz, rowvals
 
+export length_to_ptrs!
+export rewind_ptrs!
 export allocate_vector
 export allocate_matrix
 export allocate_matrix_and_vector
@@ -32,6 +34,11 @@ export create_from_nz
 export LoopStyle
 export Loop
 export DoNotLoop
+export ArrayBuilder
+export SparseMatrixBuilder
+export MinMemory
+export MinCPU
+export get_array_type
 
 export nz_index
 export is_entry_stored

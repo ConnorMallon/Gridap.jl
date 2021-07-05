@@ -204,7 +204,7 @@ function Base.getproperty(x::SkeletonPair, sym::Symbol)
   end
 end
 
-function Base.propertynames(x::SkeletonPair, private=false)
+function Base.propertynames(x::SkeletonPair, private::Bool=false)
   (fieldnames(typeof(x))...,:⁺,:⁻)
 end
 
@@ -324,6 +324,21 @@ end
 
 function get_cell_node_ids(trian::Triangulation)
   @notimplemented
+end
+
+function compress_contributions(cell_mat,trian::Triangulation)
+  cell_mat
+end
+
+function compress_ids(cell_ids,trian::Triangulation)
+  cell_ids
+end
+
+function Quadrature(trian::Triangulation,args...;kwargs...)
+  cell_ctype = get_cell_type(trian)
+  ctype_polytope = map(get_polytope,get_reffes(trian))
+  ctype_quad = map(p->Quadrature(p,args...;kwargs...),ctype_polytope)
+  cell_quad = expand_cell_data(ctype_quad,cell_ctype)
 end
 
 #"""

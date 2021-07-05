@@ -58,9 +58,6 @@ using Gridap.TensorValues: ⊗; export ⊗
 @publish Fields ε
 @publish Fields symmetric_gradient
 
-@publish Integration get_coordinates
-@publish Integration get_weights
-
 @publish ReferenceFEs is_simplex
 @publish ReferenceFEs is_n_cube
 @publish ReferenceFEs simplexify
@@ -140,15 +137,10 @@ using Gridap.CellData: ∫; export ∫
 @publish FESpaces FESpace
 @publish FESpaces TrialFESpace
 @publish FESpaces TestFESpace
-#@publish FESpaces FETerm
-#@publish FESpaces FEEnergy
-#@publish FESpaces AffineFETerm
-#@publish FESpaces LinearFETerm
-#@publish FESpaces FESource
 @publish FESpaces AffineFEOperator
 @publish FESpaces LinearFESolver
 @publish FESpaces get_free_dof_values
-@publish FESpaces get_dirichlet_values
+@publish FESpaces get_dirichlet_dof_values
 @publish FESpaces num_dirichlet_dofs
 @publish FESpaces num_free_dofs
 @publish FESpaces num_dirichlet_tags
@@ -156,8 +148,8 @@ using Gridap.CellData: ∫; export ∫
 @publish FESpaces get_dirichlet_dof_ids
 @publish FESpaces get_cell_dof_ids
 @publish FESpaces get_cell_dof_values
-@publish FESpaces get_cell_shapefuns
-@publish FESpaces get_cell_shapefuns_trial
+@publish FESpaces get_fe_basis
+@publish FESpaces get_trial_fe_basis
 @publish FESpaces FEFunction
 @publish FESpaces interpolate
 @publish FESpaces interpolate_everywhere
@@ -175,6 +167,8 @@ using Gridap.CellData: ∫; export ∫
 
 @publish Visualization writevtk
 @publish Visualization createvtk
+
+# Deprecated / removed
 
 export apply
 function apply(args...)
@@ -245,3 +239,6 @@ function FESource(args...)
   This error message will be deleted in future versions.
   """
 end
+
+@publish FESpaces get_free_values
+@publish FESpaces get_dirichlet_values

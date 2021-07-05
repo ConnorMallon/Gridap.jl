@@ -1,13 +1,10 @@
 module AssemblersTests
 
 using Test
-
-using Test
 using Gridap.Arrays
 using Gridap.TensorValues
 using Gridap.ReferenceFEs
 using Gridap.Geometry
-using Gridap.Integration
 using Gridap.Fields
 using Gridap.Algebra
 using SparseArrays
@@ -27,8 +24,8 @@ u(x) = x[1]+x[2]
 
 U = TrialFESpace(u,V)
 
-dv = get_cell_shapefuns(V)
-du = get_cell_shapefuns_trial(U)
+dv = get_fe_basis(V)
+du = get_trial_fe_basis(U)
 
 degree = 2
 Ω = Triangulation(model)

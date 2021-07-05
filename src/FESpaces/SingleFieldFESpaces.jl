@@ -109,10 +109,36 @@ function get_cell_constraints(V::SingleFieldFESpace,trian::Triangulation)
   end
 end
 
+function get_cell_is_dirichlet(V::SingleFieldFESpace,trian::Triangulation)
+  trian_V = get_triangulation(V)
+  if have_compatible_domains(trian_V,trian)
+    get_cell_is_dirichlet(V)
+  elseif have_compatible_domains(trian_V,get_background_triangulation(trian))
+    get_cell_is_dirichlet(V,get_cell_to_bgcell(trian))
+  elseif have_compatible_domains(
+    get_background_triangulation(trian_V),get_background_triangulation(trian))
+    cell_to_Vcell = get_cell_to_bgcell(trian,trian_V)
+    get_cell_is_dirichlet(V,cell_to_Vcell)
+  elseif have_compatible_domains(
+    trian_V,get_background_triangulation(get_background_triangulation(trian)))
+    bg_trian = get_background_triangulation(trian)
+    bg_cell_is_dirichlet = get_cell_is_dirichlet(V,bg_trian)
+    cell_to_bgcell = get_cell_to_bgcell(trian)
+    get_cell_is_dirichlet(bg_cell_is_dirichlet,cell_to_bgcell)
+  else
+    @unreachable
+  end
+end
+
+function get_cell_is_dirichlet(V::SingleFieldFESpace)
+  trian = get_triangulation(V)
+  Fill(true,num_cells(trian))
+end
+
 """
 """
 function test_single_field_fe_space(f::SingleFieldFESpace,pred=(==))
-  fe_basis = get_cell_shapefuns(f)
+  fe_basis = get_fe_basis(f)
   @test isa(fe_basis,CellField)
   test_fe_space(f)
   cell_dofs = get_cell_dof_ids(f)
@@ -137,7 +163,7 @@ function test_single_field_fe_space(f::SingleFieldFESpace,pred=(==))
   if length(get_dirichlet_dof_tag(f)) != 0
     @test maximum(get_dirichlet_dof_tag(f)) <= num_dirichlet_tags(f)
   end
-  cell_dof_basis = get_cell_dof_basis(f)
+  cell_dof_basis = get_fe_dof_basis(f)
   @test isa(cell_dof_basis,CellDof)
 end
 
@@ -150,7 +176,7 @@ end
 
 """
 """
-function get_dirichlet_values(f::SingleFieldFESpace)
+function get_dirichlet_dof_values(f::SingleFieldFESpace)
   zero_dirichlet_values(f)
 end
 
@@ -195,7 +221,7 @@ function gather_free_values!(free_values,f::SingleFieldFESpace,cell_vals)
 end
 
 function CellField(fs::SingleFieldFESpace,cell_vals)
-  v = get_cell_shapefuns(fs)
+  v = get_fe_basis(fs)
   cell_basis = get_data(v)
   cell_field = lazy_map(linear_combination,cell_vals,cell_basis)
   GenericCellField(cell_field,get_triangulation(v),DomainStyle(v))
@@ -243,7 +269,7 @@ end
       fs::SingleFieldFESpace, free_values::AbstractVector, dirichlet_values::AbstractVector)
 
 The resulting FEFunction will be in the space if and only if `dirichlet_values`
-are the ones provided by `get_dirichlet_values(fs)`
+are the ones provided by `get_dirichlet_dof_values(fs)`
 """
 function FEFunction(
   fs::SingleFieldFESpace, free_values::AbstractVector, dirichlet_values::AbstractVector)
@@ -253,7 +279,7 @@ function FEFunction(
 end
 
 function FEFunction(fe::SingleFieldFESpace, free_values)
-  diri_values = get_dirichlet_values(fe)
+  diri_values = get_dirichlet_dof_values(fe)
   FEFunction(fe,free_values,diri_values)
 end
 
@@ -275,7 +301,7 @@ function interpolate!(object, free_values,fs::SingleFieldFESpace)
 end
 
 function _cell_vals(fs::SingleFieldFESpace,object)
-  s = get_cell_dof_basis(fs)
+  s = get_fe_dof_basis(fs)
   trian = get_triangulation(s)
   f = CellField(object,trian,DomainStyle(s))
   cell_vals = s(f)
