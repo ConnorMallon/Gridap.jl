@@ -3,8 +3,8 @@ A single point or an array of points on the cells of a Triangulation
 CellField objects can be evaluated efficiently at CellPoint instances.
 """
 struct CellPoint{DS} <: CellDatum
-  cell_ref_point::AbstractArray{<:Union{Point,AbstractArray{<:Point}}}
-  cell_phys_point::AbstractArray{<:Union{Point,AbstractArray{<:Point}}}
+  cell_ref_point::AbstractArray#{<:Union{Point,AbstractArray{<:Point}}}
+  cell_phys_point::AbstractArray#{<:Union{Point,AbstractArray{<:Point}}}
   trian::Triangulation
   domain_style::DS
 end

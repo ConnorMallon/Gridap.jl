@@ -41,7 +41,7 @@ struct CartesianDescriptor{D,T,F<:Function} <: GridapType
       end
     end
 
-    T = eltype(sizes)
+    T = Float32#Real#eltype(sizes)
     F = typeof(map)
     new{D,T,F}(origin,sizes,Tuple(partition),map,isperiodic)
   end
@@ -215,7 +215,7 @@ end
 function get_reffes(g::CartesianGrid{D}) where D
   p = Polytope(tfill(HEX_AXIS,Val{D}()))
   order = 1
-  reffe = LagrangianRefFE(Float64,p,order)
+  reffe = LagrangianRefFE(Real,p,order)
   [reffe,]
 end
 

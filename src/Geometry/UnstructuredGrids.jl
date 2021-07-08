@@ -115,7 +115,7 @@ end
 
 function UnstructuredGrid(::Type{ReferenceFE{D}},p::Polytope{D}) where D
   order = 1
-  reffe = LagrangianRefFE(Float64,p,order)
+  reffe = LagrangianRefFE(Real,p,order)
   UnstructuredGrid(reffe)
 end
 
@@ -128,7 +128,7 @@ function UnstructuredGrid(::Type{ReferenceFE{d}},p::Polytope) where d
   reffaces = get_reffaces(Polytope{d},p)
   cell_type = get_face_type(p,d)
   order = 1
-  reffes = map( (f)-> LagrangianRefFE(Float64,f,order), reffaces)
+  reffes = map( (f)-> LagrangianRefFE(Real,f,order), reffaces)
   UnstructuredGrid(
     node_coordinates,
     cell_node_ids,
@@ -147,7 +147,7 @@ function UnstructuredGrid(x::AbstractArray{<:Point})
   cell_node_ids = identity_table(Int32,Int32,np)
   cell_type = fill(1,np)
   order = 1
-  reffes = [LagrangianRefFE(Float64,VERTEX,order),]
+  reffes = [LagrangianRefFE(Real,VERTEX,order),]
   UnstructuredGrid(
     node_coords,
     cell_node_ids,
@@ -196,7 +196,7 @@ function simplexify(grid::UnstructuredGrid)
   ltcell_to_lpoints, simplex = simplexify(p)
   cell_to_points = get_cell_node_ids(grid)
   tcell_to_points = _refine_grid_connectivity(cell_to_points, ltcell_to_lpoints)
-  ctype_to_reffe = [LagrangianRefFE(Float64,simplex,order),]
+  ctype_to_reffe = [LagrangianRefFE(Real,simplex,order),]
   tcell_to_ctype = fill(Int8(1),length(tcell_to_points))
   point_to_coords = get_node_coordinates(grid)
   UnstructuredGrid(
