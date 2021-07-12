@@ -141,7 +141,7 @@ end
 """
 function compute_reference_grid(reffe::LagrangianRefFE, nelems::Integer)
   p = get_polytope(reffe)
-  r = LagrangianRefFE(Real,p,nelems)
+  r = LagrangianRefFE(Float64,p,nelems)
   compute_linear_grid(r)
 end
 

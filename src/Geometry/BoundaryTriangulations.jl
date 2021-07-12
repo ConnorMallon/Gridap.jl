@@ -291,7 +291,7 @@ end
 
 function get_cell_ref_map(trian::BoundaryTriangulation)
   face_to_q_vertex_coords = _compute_face_to_q_vertex_coords(trian)
-  f(p) = get_shapefuns(LagrangianRefFE(Real,get_polytope(p),1))
+  f(p) = get_shapefuns(LagrangianRefFE(Float64,get_polytope(p),1))
   ftype_to_shapefuns = map( f, get_reffes(trian) )
   face_to_shapefuns = expand_cell_data(ftype_to_shapefuns,trian.glue.face_to_ftype)
   face_s_q = lazy_map(linear_combination,face_to_q_vertex_coords,face_to_shapefuns)
