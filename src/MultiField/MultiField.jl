@@ -28,6 +28,7 @@ using BlockArrays
 
 export num_fields
 export compute_field_offsets
+export _compute_cell_ids
 export restrict_to_field
 export MultiFieldCellField
 export MultiFieldFESpace
