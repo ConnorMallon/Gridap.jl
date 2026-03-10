@@ -1,6 +1,9 @@
-
 function autodiff_array_gradient(a,i_to_x)
   tag = x->ForwardDiff.gradient(a, x)
+  autodiff_array_gradient(a,i_to_x,tag)
+end
+  
+function autodiff_array_gradient(a,i_to_x,tag::Function)
   i_to_cfg = lazy_map(ConfigMap(ForwardDiff.gradient,tag),i_to_x)
   i_to_xdual = lazy_map(DualizeMap(),i_to_cfg,i_to_x)
   i_to_ydual = a(i_to_xdual)
@@ -9,7 +12,11 @@ function autodiff_array_gradient(a,i_to_x)
 end
 
 function autodiff_array_jacobian(a,i_to_x)
-  tag = x->Forwarddiff.jacobian(a, x)
+  tag = x->ForwardDiff.jacobian(a, x)
+  autodiff_array_jacobian(a,i_to_x,tag)
+end
+
+function autodiff_array_jacobian(a,i_to_x,tag::Function)
   i_to_cfg = lazy_map(ConfigMap(ForwardDiff.jacobian,tag),i_to_x)
   i_to_xdual = lazy_map(DualizeMap(),i_to_cfg,i_to_x)
   i_to_ydual = a(i_to_xdual)
@@ -24,6 +31,10 @@ end
 
 function autodiff_array_gradient(a,i_to_x,j_to_i)
   tag = x->ForwardDiff.gradient(a, x)
+  autodiff_array_gradient(a,i_to_x,j_to_i,tag)
+end
+
+function autodiff_array_gradient(a,i_to_x,j_to_i,tag::Function)
   i_to_cfg = lazy_map(ConfigMap(ForwardDiff.gradient,tag),i_to_x)
   i_to_xdual = lazy_map(DualizeMap(),i_to_cfg,i_to_x)
   j_to_ydual = a(i_to_xdual)
@@ -33,7 +44,11 @@ function autodiff_array_gradient(a,i_to_x,j_to_i)
 end
 
 function autodiff_array_jacobian(a,i_to_x,j_to_i)
-  tag = x->Forwarddiff.jacobian(a, x)
+  tag = x->ForwardDiff.jacobian(a, x)
+  autodiff_array_jacobian(a,i_to_x,j_to_i,tag)
+end
+
+function autodiff_array_jacobian(a,i_to_x,j_to_i,tag::Function)
   i_to_cfg = lazy_map(ConfigMap(ForwardDiff.jacobian,tag),i_to_x)
   i_to_xdual = lazy_map(DualizeMap(),i_to_cfg,i_to_x)
   j_to_ydual = a(i_to_xdual)
@@ -57,7 +72,6 @@ function autodiff_array_reindex(i_to_val, j_to_i)
   end
   return j_to_val
 end
-
 struct ConfigMap{
   F <: Union{typeof(ForwardDiff.gradient),typeof(ForwardDiff.jacobian)},
   T <: Union{<:Function,Nothing}} <: Map

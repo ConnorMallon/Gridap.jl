@@ -16,11 +16,12 @@ end
 
 function _gradient(f,uh,fuh::DomainContribution)
   terms = DomainContribution()
+  tag = x->Gridap.gradient(f, uh)
   for trian in get_domains(fuh)
     g = _change_argument(gradient,f,trian,uh)
     cell_u = get_cell_dof_values(uh)
     cell_id = _compute_cell_ids(uh,trian)
-    cell_grad = autodiff_array_gradient(g,cell_u,cell_id)
+    cell_grad = autodiff_array_gradient(g,cell_u,cell_id,tag)
     add_contribution!(terms,trian,cell_grad)
   end
   terms
@@ -42,11 +43,12 @@ end
 
 function _jacobian(f,uh,fuh::DomainContribution)
   terms = DomainContribution()
+  tag = x->Gridap.jacobian(f, uh)
   for trian in get_domains(fuh)
     g = _change_argument(jacobian,f,trian,uh)
     cell_u = get_cell_dof_values(uh)
     cell_id = _compute_cell_ids(uh,trian)
-    cell_grad = autodiff_array_jacobian(g,cell_u,cell_id)
+    cell_grad = autodiff_array_jacobian(g,cell_u,cell_id,tag)
     add_contribution!(terms,trian,cell_grad)
   end
   terms
