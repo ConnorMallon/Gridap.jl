@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed a bug for autodiff with empty target triangulation, see Issue[#1288](https://github.com/gridap/Gridap.jl/issues/1288) . Since PR[#1289](https://github.com/gridap/Gridap.jl/pull/1289).
+
 ## [0.20.4] - 2026-04-23
 
 ### Added
