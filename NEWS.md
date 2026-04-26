@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## Fixed
+
+- Fix a bug where external types were not correctly parsed with generated functions in Polynomials, see Issue[#1286](https://github.com/gridap/Gridap.jl/issues/1286). Since PR[#1287](https://github.com/gridap/Gridap.jl/pull/1287).
+
 ## [0.20.4] - 2026-04-23
 
 ### Added
