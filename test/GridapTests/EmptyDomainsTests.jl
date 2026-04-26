@@ -80,4 +80,14 @@ tol = 1.0e-9
 @test eu_h1 < tol
 @test ep_l2 < tol
 
+###############################################
+# Autodiff when the target domain is empty
+
+Ω_empty = Triangulation(model, Int32[])
+dΩ = Measure(Ω_empty, 2)
+V = TestFESpace(model, ReferenceFE(lagrangian, Float64, 1))
+uh = zero(V)
+j(u) = ∫(u * u)dΩ
+dj = gradient(j, uh)
+
 end # module
