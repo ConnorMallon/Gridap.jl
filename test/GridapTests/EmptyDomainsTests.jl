@@ -82,6 +82,18 @@ tol = 1.0e-9
 @test ep_l2 < tol
 
 ###############################################
+# Multifield jumps
+
+V = TestFESpace(model, ReferenceFE(lagrangian, Float64, 1))
+W = MultiFieldFESpace([V,V])
+
+Λ = Skeleton(model,falses(num_cells(model)))
+dΛ = Measure(Λ,2)
+
+a((u,p),(v,q)) = ∫(jump(∇(u)) ⊙ jump(∇(v)))dΛ
+assemble_matrix(a,W,W)
+
+###############################################
 # Autodiff when the target domain is empty
 
 V = TestFESpace(model, ReferenceFE(lagrangian, Float64, 1))
