@@ -2,6 +2,7 @@ module EmptyDomainsTests
 
 using Gridap
 import Gridap: ∇
+using Gridap.Geometry
 using Test
 
 # Analytical functions
