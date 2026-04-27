@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `NewtonRaphsonSolver` now correctly handles already-converged initial states and reports non-convergence properly. Previously crashed with `@unreachable` when starting residual was ~0. Now checks initial convergence and throws informative error instead of assertion failure. Since PR[#1285](https://github.com/gridap/Gridap.jl/pull/1285). (@Ady0333)
+
 ## [0.20.4] - 2026-04-23
 
 ### Added
