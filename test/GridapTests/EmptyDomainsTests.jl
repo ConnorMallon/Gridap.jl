@@ -83,11 +83,23 @@ tol = 1.0e-9
 ###############################################
 # Autodiff when the target domain is empty
 
-Ω_empty = Triangulation(model, Int32[])
-dΩ = Measure(Ω_empty, 2)
 V = TestFESpace(model, ReferenceFE(lagrangian, Float64, 1))
 uh = zero(V)
+
+# Case 1
+Ω_empty = Triangulation(model, Int32[])
+dΩ = Measure(Ω_empty, 2)
 j(u) = ∫(u * u)dΩ
 dj = gradient(j, uh)
+dj_vec = assemble_vector(dj,V)
+
+# Case 2
+Ωa = Triangulation(model,Int32[])
+Ωb = Triangulation(model,Int32[1])
+Ω = AppendedTriangulation(Ωa,Ωb)
+dΩ = Measure(Ω,2)
+j(u) = ∫(u)dΩ
+dj = gradient(j,uh)
+dj_vec = assemble_vector(dj,V)
 
 end # module
