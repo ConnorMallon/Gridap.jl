@@ -68,12 +68,6 @@ function autodiff_array_reindex(i_to_val, j_to_i)
   return j_to_val
 end
 
-function autodiff_array_reindex(i_to_val, j_to_i::AppendedArray)
-  a = autodiff_array_reindex(i_to_val, j_to_i.a)
-  b = autodiff_array_reindex(i_to_val, j_to_i.b)
-  return lazy_append(a,b)
-end
-
 """
     struct ConfigMap{F,T} <: Map
 
