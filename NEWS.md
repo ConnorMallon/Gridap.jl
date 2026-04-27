@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `NLSolver` now checks convergence status before returning solution. Previously, when `nlsolve()` failed to converge, the unconverged last iterate was silently returned. Now throws an informative error with iteration count and residual norm. Since PR[#1283](https://github.com/gridap/Gridap.jl/pull/1283). (@Ady0333)
+
 ## [0.20.4] - 2026-04-23
 
 ### Added
