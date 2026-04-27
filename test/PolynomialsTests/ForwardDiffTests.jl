@@ -25,7 +25,7 @@ evaluate(g,xd)
 d0 = ForwardDiff.Dual{ForwardDiff.Tag{Arrays.autodiff_array_gradient}}(1,1) # fails
 tv = TensorValue(d0)
 
-r = CachedMatrix(fill(tv,1,1))
+r = CachedMatrix(fill(tv,1,2))
 i = 1
 s = Polynomials.StaticArraysCore.MVector(d0)
 k = 1
