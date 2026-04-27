@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+<<<<<<< fix/nlsolver-convergence-check
+### Fixed
+
+- `NLSolver` now checks convergence status before returning solution. Previously, when `nlsolve()` failed to converge, the unconverged last iterate was silently returned. Now throws an informative error with iteration count and residual norm. Since PR[#1283](https://github.com/gridap/Gridap.jl/pull/1283). (@Ady0333)
+=======
 ## Fixed
 
 - Fix a bug where external types were not correctly parsed with generated functions in Polynomials, see Issue[#1286](https://github.com/gridap/Gridap.jl/issues/1286). Since PR[#1287](https://github.com/gridap/Gridap.jl/pull/1287).
+>>>>>>> master
 
 ## [0.20.4] - 2026-04-23
 
