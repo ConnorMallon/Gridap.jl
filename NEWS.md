@@ -5,8 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.20.6] - 2026-04-29
 
+### Fixed
+
+- Strengthen compute_facet_owners(...) so that the owner of a facet does not depend on how the cells shared by a facet are listed in the mesh data structure, but on the (local or global) cell identifiers of the cells sharing the facet. Since PR[#1291](https://github.com/gridap/Gridap.jl/pull/1291).
+ 
 ## [0.20.5] - 2026-04-28
 
 ### Fixed
