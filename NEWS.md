@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- A couple of broken tests in DivConformingFESpacesTests.jl related to NormalSignMap facet cell owners default criterion. Since PR[#XXX](https://github.com/gridap/Gridap.jl/pull/XXX)
+
 ## [0.20.5] - 2026-04-28
 
 ### Fixed
