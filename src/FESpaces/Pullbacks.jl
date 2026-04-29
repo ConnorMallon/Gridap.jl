@@ -188,7 +188,7 @@ function evaluate!(cache,k::NormalSignMap,reffe,facet_own_dofs,cell)
   return Diagonal(dof_sign)
 end
 
-function compute_facet_owners(model::DiscreteModel{Dc}, local_to_global::F=identity) where {Dc,F}
+function compute_facet_owners(model::DiscreteModel{Dc}, select_nbor=first) where {Dc}
   topo = get_grid_topology(model)
   facet_to_cell = get_faces(topo, Dc-1, Dc)
 
@@ -196,22 +196,11 @@ function compute_facet_owners(model::DiscreteModel{Dc}, local_to_global::F=ident
   owners = Vector{Int32}(undef, nfacets)
   for facet in 1:nfacets
     facet_cells = view(facet_to_cell, facet)
-    @assert !isempty(facet_cells) "Facet $facet has no adjacent cells"
-
-    max_lid = first(facet_cells)
-    max_gid = local_to_global(max_lid)
-    for cell in Iterators.drop(facet_cells, 1)
-      gid = local_to_global(cell)
-      if gid > max_gid
-        max_gid = gid
-        max_lid = cell
-      end
-    end
-    owners[facet] = max_lid
+    @check !isempty(facet_cells) "Facet $facet has no adjacent cells"
+    owners[facet] = select_nbor(facet_cells)
   end
   return owners
 end
-
 
 #################
 # DOFScalingMap #
