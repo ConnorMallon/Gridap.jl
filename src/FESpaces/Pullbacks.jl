@@ -188,7 +188,7 @@ function evaluate!(cache,k::NormalSignMap,reffe,facet_own_dofs,cell)
   return Diagonal(dof_sign)
 end
 
-function compute_facet_owners(model::DiscreteModel{Dc}) where {Dc}
+function compute_facet_owners(model::DiscreteModel{Dc}, local_to_global::Function=identity) where {Dc}
   topo = get_grid_topology(model)
   facet_to_cell = get_faces(topo, Dc-1, Dc)
 
@@ -196,9 +196,17 @@ function compute_facet_owners(model::DiscreteModel{Dc}) where {Dc}
   owners = Vector{Int32}(undef, nfacets)
   for facet in 1:nfacets
     facet_cells = view(facet_to_cell, facet)
-    owners[facet] = first(facet_cells)
+    max_gid=-1
+    max_lid=-1
+    for cell in facet_cells
+        gid = local_to_global(cell)
+        if gid > max_gid
+          max_gid = gid
+          max_lid = cell
+        end
+    end
+    owners[facet] = max_lid
   end
-
   return owners
 end
 
