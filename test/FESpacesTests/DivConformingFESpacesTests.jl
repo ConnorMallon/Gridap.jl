@@ -306,7 +306,7 @@ end
   order  = 0
   reffe = ReferenceFE(raviart_thomas,Float64,order)
   V1 = TestFESpace(model,reffe)
-  uh1 = FEFunction(V1,rand(num_free_dofs(V1)))
+  uh1 = FEFunction(V1,ones(num_free_dofs(V1)))
 
   topo = get_grid_topology(model)
   facet_cells = get_faces(topo,1,2)
