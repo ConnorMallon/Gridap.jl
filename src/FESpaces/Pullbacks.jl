@@ -196,14 +196,16 @@ function compute_facet_owners(model::DiscreteModel{Dc}, local_to_global::F=ident
   owners = Vector{Int32}(undef, nfacets)
   for facet in 1:nfacets
     facet_cells = view(facet_to_cell, facet)
-    max_gid=-1
-    max_lid=-1
-    for cell in facet_cells
-        gid = local_to_global(cell)
-        if gid > max_gid
-          max_gid = gid
-          max_lid = cell
-        end
+    @assert !isempty(facet_cells) "Facet $facet has no adjacent cells"
+
+    max_lid = first(facet_cells)
+    max_gid = local_to_global(max_lid)
+    for cell in Iterators.drop(facet_cells, 1)
+      gid = local_to_global(cell)
+      if gid > max_gid
+        max_gid = gid
+        max_lid = cell
+      end
     end
     owners[facet] = max_lid
   end
