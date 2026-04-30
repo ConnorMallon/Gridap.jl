@@ -7,8 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-
+### Added
 - Make `compute_facet_owners(...)` more flexible, allowing the user to provide a function to select the owner from neighboring cells. Since PR[#1291](https://github.com/gridap/Gridap.jl/pull/1291).
 
 ## [0.20.5] - 2026-04-28
