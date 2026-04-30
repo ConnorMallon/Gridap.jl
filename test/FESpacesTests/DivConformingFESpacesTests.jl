@@ -327,8 +327,8 @@ end
   data_uh1 = get_data(uh1)
   data_uh2 = get_data(uh2)
 
-  @test_broken evaluate(data_uh1[1],[Point(0.5,0.5)])[1] ≈ evaluate(data_uh2[1],[Point(0.5,0.5)])[1]
-  @test_broken evaluate(data_uh1[2],[Point(0.5,0.5)])[1] ≈ evaluate(data_uh2[2],[Point(0.5,0.5)])[1]
+  @test evaluate(data_uh1[1],[Point(0.5,0.5)])[1] ≈ evaluate(data_uh2[1],[Point(0.5,0.5)])[1]
+  @test evaluate(data_uh1[2],[Point(0.5,0.5)])[1] ≈ evaluate(data_uh2[2],[Point(0.5,0.5)])[1]
 end
 
 end # module
