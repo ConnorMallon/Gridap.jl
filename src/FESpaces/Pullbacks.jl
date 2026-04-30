@@ -188,7 +188,7 @@ function evaluate!(cache,k::NormalSignMap,reffe,facet_own_dofs,cell)
   return Diagonal(dof_sign)
 end
 
-function compute_facet_owners(model::DiscreteModel{Dc}, select_nbor=first) where {Dc}
+function compute_facet_owners(model::DiscreteModel{Dc}, select_nbor=maximum) where {Dc}
   topo = get_grid_topology(model)
   facet_to_cell = get_faces(topo, Dc-1, Dc)
 
