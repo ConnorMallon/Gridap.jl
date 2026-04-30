@@ -197,7 +197,12 @@ function compute_facet_owners(model::DiscreteModel{Dc}, select_nbor=maximum) whe
   for facet in 1:nfacets
     facet_cells = view(facet_to_cell, facet)
     @check !isempty(facet_cells) "Facet $facet has no adjacent cells"
-    owners[facet] = select_nbor(facet_cells)
+    selected_owner = select_nbor(facet_cells)
+    @check selected_owner isa Integer "select_nbor must return an integer owner for facet $facet, got $(typeof(selected_owner))"
+    owner = Int(selected_owner)
+    @check owner != 0 "select_nbor returned invalid owner 0 for facet $facet; expected one of $(collect(facet_cells))"
+    @check owner in facet_cells "select_nbor returned invalid owner $owner for facet $facet; expected one of $(collect(facet_cells))"
+    owners[facet] = Int32(owner)
   end
   return owners
 end
