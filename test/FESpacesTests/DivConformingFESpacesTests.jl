@@ -310,8 +310,17 @@ end
 
   topo = get_grid_topology(model)
   facet_cells = get_faces(topo,1,2)
-  facet_cells.data[4]=2
-  facet_cells.data[5]=1
+  interior_facets = 0
+  for facet in 1:(length(facet_cells.ptrs)-1)
+    first_cell = facet_cells.ptrs[facet]
+    last_cell = facet_cells.ptrs[facet+1] - 1
+    if last_cell - first_cell + 1 == 2
+      facet_cells.data[first_cell], facet_cells.data[last_cell] =
+        facet_cells.data[last_cell], facet_cells.data[first_cell]
+      interior_facets += 1
+    end
+  end
+  @test interior_facets == 1
   V2 = TestFESpace(model,reffe)
   uh2 = FEFunction(V2,get_free_dof_values(uh1))
 
