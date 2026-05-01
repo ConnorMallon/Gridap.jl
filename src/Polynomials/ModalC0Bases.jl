@@ -43,9 +43,10 @@ struct ModalC0Basis{D,V,T} <: PolynomialBasis{D,V,ModalC0}
     _msg =  "The number of bounding box points in a and b should match the number of terms"
     @check length(terms) == length(a) == length(b) _msg
     @check T == eltype(V) "Point and polynomial values should have the same scalar body"
+    VV = make_concretetype(V)
     K = maximum(orders, init=0)
 
-    new{D,V,T}(K,orders,terms,a,b)
+    new{D,VV,T}(K,orders,terms,a,b)
   end
 end
 
