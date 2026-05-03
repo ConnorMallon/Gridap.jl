@@ -1,3 +1,6 @@
+
+"""
+"""
 function autodiff_array_gradient(a,i_to_x)
   tag = x->ForwardDiff.gradient(a, x)
   autodiff_array_gradient(a,i_to_x,tag)
@@ -8,22 +11,22 @@ function autodiff_array_gradient(a,i_to_x,tag::Function)
   i_to_xdual = lazy_map(DualizeMap(),i_to_cfg,i_to_x)
   i_to_ydual = a(i_to_xdual)
   i_to_result = lazy_map(AutoDiffMap(),i_to_cfg,i_to_ydual)
-  i_to_result
+  return i_to_result
 end
 
+"""
+"""
 function autodiff_array_jacobian(a,i_to_x)
   tag = x->ForwardDiff.jacobian(a, x)
-  autodiff_array_jacobian(a,i_to_x,tag)
-end
-
-function autodiff_array_jacobian(a,i_to_x,tag::Function)
   i_to_cfg = lazy_map(ConfigMap(ForwardDiff.jacobian,tag),i_to_x)
   i_to_xdual = lazy_map(DualizeMap(),i_to_cfg,i_to_x)
   i_to_ydual = a(i_to_xdual)
   i_to_result = lazy_map(AutoDiffMap(),i_to_cfg,i_to_ydual)
-  i_to_result
+  return i_to_result
 end
 
+"""
+"""
 function autodiff_array_hessian(a,i_to_x)
   agrad = i_to_y -> autodiff_array_gradient(a,i_to_y)
   autodiff_array_jacobian(agrad,i_to_x)
@@ -40,21 +43,17 @@ function autodiff_array_gradient(a,i_to_x,j_to_i,tag::Function)
   j_to_ydual = a(i_to_xdual)
   j_to_cfg = autodiff_array_reindex(i_to_cfg,j_to_i)
   j_to_result = lazy_map(AutoDiffMap(),j_to_cfg,j_to_ydual)
-  j_to_result
+  return j_to_result
 end
 
 function autodiff_array_jacobian(a,i_to_x,j_to_i)
   tag = x->ForwardDiff.jacobian(a, x)
-  autodiff_array_jacobian(a,i_to_x,j_to_i,tag)
-end
-
-function autodiff_array_jacobian(a,i_to_x,j_to_i,tag::Function)
   i_to_cfg = lazy_map(ConfigMap(ForwardDiff.jacobian,tag),i_to_x)
   i_to_xdual = lazy_map(DualizeMap(),i_to_cfg,i_to_x)
   j_to_ydual = a(i_to_xdual)
   j_to_cfg = autodiff_array_reindex(i_to_cfg,j_to_i)
   j_to_result = lazy_map(AutoDiffMap(),j_to_cfg,j_to_ydual)
-  j_to_result
+  return j_to_result
 end
 
 function autodiff_array_hessian(a,i_to_x,j_to_i)
@@ -63,6 +62,10 @@ function autodiff_array_hessian(a,i_to_x,j_to_i)
 end
 
 function autodiff_array_reindex(i_to_val, j_to_i)
+  if isempty(j_to_i)
+    # Necessary to avoid https://github.com/gridap/Gridap.jl/issues/1288
+    return Fill(testitem(i_to_val),0)
+  end
   n_neg = count(j -> j < 0, j_to_i)
   if iszero(n_neg)
     j_to_val = lazy_map(Reindex(i_to_val),j_to_i)
@@ -72,6 +75,13 @@ function autodiff_array_reindex(i_to_val, j_to_i)
   end
   return j_to_val
 end
+
+"""
+    struct ConfigMap{F,T} <: Map
+
+Map for ForwardDiff.[`F`]Config(`T`,...) where `T` is tag function and `F` is
+either gradient or jacobian.
+"""
 struct ConfigMap{
   F <: Union{typeof(ForwardDiff.gradient),typeof(ForwardDiff.jacobian)},
   T <: Union{<:Function,Nothing}} <: Map
@@ -85,26 +95,67 @@ ConfigMap(f) = ConfigMap(f,nothing)
 # TODO Prescribing long chunk size can lead to slow compilation times!
 function return_cache(k::ConfigMap{typeof(ForwardDiff.gradient)},x)
   cfg = ForwardDiff.GradientConfig(k.tag,x,ForwardDiff.Chunk{length(x)}())
-  cfg
+  return cfg
 end
 
 function return_cache(k::ConfigMap{typeof(ForwardDiff.jacobian)},x)
   cfg = ForwardDiff.JacobianConfig(k.tag,x,ForwardDiff.Chunk{length(x)}())
-  cfg
+  return cfg
 end
 
 function evaluate!(cfg,k::ConfigMap,x)
-  cfg
+  return cfg
 end
 
+# For a zero-length LazyArray of GradientConfig/JacobianConfig, the generic testitem
+# computes return_value(ConfigMap, testitem(x_slice)) where testitem(x_slice) is a
+# zero-length vector (because x_slice is also zero-length). This yields a config with
+# chunk size 0, which does not match the declared type T whose chunk size N > 0.
+# Fix: extract N from T and call return_cache with a vector of length N, using the
+# actual tag closure recovered from testitem(a.maps). The cache is never used for
+# zero-length arrays, so the constructed config is only needed for type correctness.
+function testitem(a::LazyArray{A,T} where A) where {Tag,V,N,D,T<:ForwardDiff.GradientConfig{Tag,V,N,D}}
+  if length(a) > 0
+    first(a)::T
+  else
+    gi = testitem(a.maps)
+    return_cache(gi, zeros(V, N))
+  end::T
+end
+
+function testitem(a::LazyArray{A,T} where A) where {Tag,V,N,D,T<:ForwardDiff.JacobianConfig{Tag,V,N,D}}
+  if length(a) > 0
+    first(a)::T
+  else
+    gi = testitem(a.maps)
+    return_cache(gi, zeros(V, N))
+  end::T
+end
+
+"""
+    struct DualizeMap <: Map
+"""
 struct DualizeMap <: Map end
 
 function evaluate!(cache,::DualizeMap,cfg,x)
   xdual, seeds = cfg.duals, cfg.seeds
   ForwardDiff.seed!(xdual, x, seeds)
-  xdual
+  return xdual
 end
 
+# When testitem of a zero-length ConfigMap LazyArray is called, it returns a
+# GradientConfig/JacobianConfig with the correct chunk size N (recovered from
+# the type parameter), while the companion x test item has length 0. Calling
+# evaluate! with a length-N config and a length-0 x would crash in seed!.
+# return_value only needs to produce a type-correct placeholder; its value is
+# irrelevant since zero-length arrays are never iterated.
+function return_value(::DualizeMap, cfg::Union{ForwardDiff.GradientConfig, ForwardDiff.JacobianConfig}, x::AbstractVector)
+  similar(cfg.duals, length(x))
+end
+
+"""
+    struct AutoDiffMap <: Map
+"""
 struct AutoDiffMap <: Map end
 
 function return_cache(::AutoDiffMap,cfg::ForwardDiff.GradientConfig,ydual)
@@ -146,7 +197,7 @@ function return_cache(k::AutoDiffMap,cfg::ForwardDiff.JacobianConfig,ydual::Vect
   ri = evaluate!(ci,k,cfg,yi)
   cache = Vector{typeof(ci)}(undef,length(ydual.array))
   array = Vector{typeof(ri)}(undef,length(ydual.array))
-  for i in eachindex(ydual.array)
+  @inbounds for i in eachindex(ydual.array)
     if ydual.touched[i]
       cache[i] = return_cache(k,cfg,ydual.array[i])
     end
@@ -157,7 +208,8 @@ end
 
 function evaluate!(cache,k::AutoDiffMap,cfg::ForwardDiff.JacobianConfig,ydual::VectorBlock)
   r, c = cache
-  for i in eachindex(ydual.array)
+  @check length(r) >= length(c) >= length(ydual)
+  @inbounds for i in eachindex(ydual.array)
     if ydual.touched[i]
       r.array[i] = evaluate!(c[i],k,cfg,ydual.array[i])
     end
@@ -189,9 +241,9 @@ end
 
 function block_offsets(x::VectorBlock, offset)
   offsets = ()
-  for i in eachindex(x.touched)
+  @inbounds for i in eachindex(x.touched)
     if x.touched[i]
-      @inbounds offsets_i, offset = block_offsets(x.array[i], offset)
+      offsets_i, offset = block_offsets(x.array[i], offset)
     else
       offsets_i = -1
     end
@@ -311,10 +363,11 @@ end
 function seed_block!(
   duals::VectorBlock, x::VectorBlock, seeds::NTuple{N,ForwardDiff.Partials{N}}, offsets
 ) where N
-  for i in eachindex(duals.touched)
+  @check length(x) == length(duals) == length(offsets)
+  @inbounds for i in eachindex(duals.touched)
     if duals.touched[i]
       @check x.touched[i]
-      @inbounds seed_block!(duals.array[i], x.array[i], seeds, offsets[i])
+      seed_block!(duals.array[i], x.array[i], seeds, offsets[i])
     end
   end
   return duals
@@ -330,9 +383,9 @@ function seed_block!(
 end
 
 function extract_gradient_block!(::Type{T}, result::VectorBlock, dual, offsets) where T
-  for i in eachindex(result.touched)
+  @inbounds for i in eachindex(result.touched)
     if result.touched[i]
-      @inbounds extract_gradient_block!(T, result.array[i], dual, offsets[i])
+      extract_gradient_block!(T, result.array[i], dual, offsets[i])
     end
   end
   return result
@@ -353,8 +406,8 @@ end
 function extract_jacobian_block!(::Type{T}, result::MatrixBlock, dual::VectorBlock, offsets) where T
   for i in axes(result.touched,1)
     for j in axes(result.touched,2)
-      if result.touched[i,j]
-        @inbounds extract_jacobian_block!(T, result.array[i,j], dual.array[i], offsets[j])
+      @inbounds if result.touched[i,j]
+        extract_jacobian_block!(T, result.array[i,j], dual.array[i], offsets[j])
       end
     end
   end
@@ -364,9 +417,9 @@ end
 # Skeleton + Multifield: The VectorBlocks correspond to +/-
 function extract_jacobian_block!(::Type{T}, result::VectorBlock, dual::VectorBlock, offset) where T
   for i in axes(result.touched,1)
-    if result.touched[i]
+    @inbounds if result.touched[i]
       @check dual.touched[i]
-      @inbounds extract_jacobian_block!(T, result.array[i], dual.array[i], offset)
+      extract_jacobian_block!(T, result.array[i], dual.array[i], offset)
     end
   end
   return result
